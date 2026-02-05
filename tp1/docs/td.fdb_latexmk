@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1770244249.19745 "/home/santiago/RO202/tp1/docs/td.tex" "td.pdf" "td" 1770244250.20148 0
+["pdflatex"] 1770283149.64855 "/home/santiago/RO202/tp1/docs/td.tex" "td.pdf" "td" 1770283150.69743 0
   "/etc/texmf/web2c/texmf.cnf" 1762418151.39241 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/santiago/RO202/tp1/docs/td.tex" 1770244212.90456 17717 5778953c14c4c645fe2e7825eca45017 ""
+  "/home/santiago/RO202/tp1/docs/td.tex" 1770283149.30187 17681 db60fe2314bc5c7a2bd347a84d7c6e33 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/times/ptmb7t.tfm" 1136768653 2172 fd0c924230362ff848a33632ed45dc23 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/times/ptmbi7t.tfm" 1136768653 2228 e564491c42a4540b5ebb710a75ff306c ""
@@ -214,9 +214,9 @@
   "img/exo2.png" 1770207344.97662 41990 cda7842ec010627997ad49c91fd3c2fe ""
   "img/exo3.png" 1770208030.02997 75787 242e72e90f6efa00ef13a074668b8e3a ""
   "img/exo4.png" 1770209042.65082 82703 aa6c765841e2ee4288b7f6e37b6fa7cb ""
-  "td.aux" 1770244250.1101 3752 ce58036b448d5a78218540a06b4ff405 "pdflatex"
-  "td.out" 1770244250.1101 644 7f7c1232b568af1862e6dc928a8c7aeb "pdflatex"
-  "td.tex" 1770244212.90456 17717 5778953c14c4c645fe2e7825eca45017 ""
+  "td.aux" 1770283150.57916 3752 ce58036b448d5a78218540a06b4ff405 "pdflatex"
+  "td.out" 1770283150.57916 644 7f7c1232b568af1862e6dc928a8c7aeb "pdflatex"
+  "td.tex" 1770283149.30187 17681 db60fe2314bc5c7a2bd347a84d7c6e33 ""
   (generated)
   "td.aux"
   "td.log"
