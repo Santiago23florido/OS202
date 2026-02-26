@@ -1,0 +1,477 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\graphicspath{{images/}{img/}{tp2/docs/img/}}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\setlength{\emergencystretch}{1.5em}
+
+\title{OS202 -- TD3: Linear programming}
+\author{Santiago Florido Gomez}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents Ford--Fulkerson applications on flow networks, including maximum-flow
+computations, minimum cuts, and unit-capacity models for matching and disjoint-path problems.
+\end{abstract}
+
+\section{Introduction}
+In the present document, we will present applications of flow network modeling aimed at optimizing the circulation of resources in systems with limited capacities, mainly by applying the Ford--Fulkerson algorithm. With this objective, we seek to find maximum flows (i.e., the maximum throughput), detect bottlenecks, and enable assignment and matching in resource-allocation problems, such as the lock-and-key problem for opening a safe. Finally, we consider the use of Ford--Fulkerson on graphs with unit capacities in order to find disjoint routes in systems that require redundancy and robustness.
+
+\section{Relaxation linéaire et résolution préliminaire par la méthode graphique}
+
+On considère le programme linéaire en nombres entiers suivant :
+\begin{equation}\label{eq:ILP}
+\begin{aligned}
+\max\quad & F = 2x + y\\
+\text{s.c.}\quad 
+& y \ge x - 4,\\
+& y \le 8,\\
+& 8x + 5y \le 56,\\
+& x,y \in \mathbb{N}.
+\end{aligned}
+\end{equation}
+
+La \emph{relaxation linéaire} s'obtient en remplaçant la contrainte d'intégralité $x,y\in\mathbb{N}$ de \eqref{eq:ILP} par une contrainte de réel. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\linewidth]{q1_feasible_region.png}
+\caption{Représentation graphique des contraintes et de la région réalisable (Q1).}
+\label{fig:q1-feasible-region}
+\end{figure}
+
+Pour la représentation graphique, on trace les droites associées aux contraintes actives :
+\begin{align}
+y &= x - 4, \label{eq:L1}\\
+y &= 8, \label{eq:L2}\\
+8x + 5y &= 56. \label{eq:L3}
+\end{align}
+La région réalisable est l'intersection des demi-plans : au-dessus de \eqref{eq:L1}, en dessous de \eqref{eq:L2}, et en dessous de \eqref{eq:L3}.
+
+Les points candidats (sommets) se trouvent à l'intersection des droites \eqref{eq:L1}--\eqref{eq:L3}.
+
+\paragraph{Intersection de \eqref{eq:L2} et \eqref{eq:L3}.}
+En posant $y=8$ dans \eqref{eq:L3} :
+\begin{equation}\label{eq:intA}
+8x + 5\cdot 8 = 56 \;\Rightarrow\; 8x = 16 \;\Rightarrow\; x=2,
+\end{equation}
+d'où
+\begin{equation}\label{eq:A}
+A=(2,8).
+\end{equation}
+
+\paragraph{Intersection de \eqref{eq:L1} et \eqref{eq:L3}.}
+En substituant $y=x-4$ (depuis \eqref{eq:L1}) dans \eqref{eq:L3} :
+\begin{equation}\label{eq:intB}
+\begin{aligned}
+8x + 5(x-4) &= 56,\\
+13x-20 &= 56,\\
+13x &= 76,\\
+x &= \frac{76}{13}.
+\end{aligned}
+\end{equation}
+puis
+\begin{equation}\label{eq:B}
+y=x-4=\frac{76}{13}-4=\frac{24}{13}
+\quad\Rightarrow\quad
+B=\left(\frac{76}{13},\frac{24}{13}\right).
+\end{equation}
+
+\paragraph{Intersection de \eqref{eq:L1} et \eqref{eq:L2}.}
+On obtient $8=x-4$, donc $x=12$, ce qui donne le point $(12,8)$, mais ce point viole \eqref{eq:L3} car $8\cdot 12 + 5\cdot 8 = 136 > 56$. Il n'est donc pas réalisable.
+
+
+On calcule $F=2x+y$ aux points réalisables \eqref{eq:A} et \eqref{eq:B}.
+
+\paragraph{Au point $A$.}
+\begin{equation}\label{eq:FA}
+F(A)=2\cdot 2 + 8 = 12.
+\end{equation}
+
+\paragraph{Au point $B$.}
+\begin{equation}\label{eq:FB}
+F(B)=2\cdot \frac{76}{13} + \frac{24}{13}
+=\frac{152+24}{13}
+=\frac{176}{13}.
+\end{equation}
+
+Comme \eqref{eq:FB} est supérieur à \eqref{eq:FA}, le maximum de la relaxation est atteint en $B$.
+
+La solution optimale est :
+\begin{equation}\label{eq:opt}
+(x^\star,y^\star)=\left(\frac{76}{13},\frac{24}{13}\right),
+\qquad
+F^\star=\frac{176}{13}.
+\end{equation}
+On considère le même ensemble de contraintes et la relaxation linéaire associée :
+\begin{equation}\label{eq:LP_feas}
+\mathcal{F}_{\mathbb{R}}=
+\left\{
+\begin{aligned}
+(x,y)\in\mathbb{R}^2 :\;& y\ge x-4,\; y\le 8,\\
+& 8x+5y\le 56,\; x\ge 0,\; y\ge 0
+\end{aligned}
+\right\},
+\end{equation}
+et l'ensemble faisable entier :
+\begin{equation}\label{eq:IP_feas}
+\mathcal{F}_{\mathbb{N}}=\mathcal{F}_{\mathbb{R}}\cap \mathbb{N}^2.
+\end{equation}
+
+
+Pour l'objectif
+\begin{equation}\label{eq:Fobj}
+F(x,y)=2x+y,
+\end{equation}
+la solution optimale de la relaxation linéaire (obtenue précédemment) est
+\begin{equation}\label{eq:LPoptF}
+(x^\star_{\mathbb{R}},y^\star_{\mathbb{R}})=\left(\frac{76}{13},\frac{24}{13}\right),
+\qquad
+F^\star_{\mathbb{R}}=\frac{176}{13}.
+\end{equation}
+Comme $(x^\star_{\mathbb{R}},y^\star_{\mathbb{R}})\notin \mathbb{N}^2$, cette solution n'est pas admissible pour le problème entier.
+
+On peut toutefois en déduire une \emph{borne supérieure} pour le problème entier : puisque \eqref{eq:IP_feas} implique $\mathcal{F}_{\mathbb{N}}\subset \mathcal{F}_{\mathbb{R}}$, on a
+\begin{equation}\label{eq:boundF}
+F^\star_{\mathbb{N}}\le F^\star_{\mathbb{R}}=\frac{176}{13}.
+\end{equation}
+De plus, pour tout $(x,y)\in\mathcal{F}_{\mathbb{N}}$, la valeur \eqref{eq:Fobj} est entière, donc \eqref{eq:boundF} donne
+\begin{equation}\label{eq:boundF_floor}
+F^\star_{\mathbb{N}}\le \left\lfloor \frac{176}{13}\right\rfloor=13.
+\end{equation}
+
+En exhibant un point entier faisable atteignant cette borne, par exemple
+\begin{equation}\label{eq:int_pointF}
+(\hat x,\hat y)=(5,3),
+\end{equation}
+on vérifie l'admissibilité dans \eqref{eq:LP_feas} via
+\begin{equation}\label{eq:checkF}
+3\ge 5-4,\qquad 3\le 8,\qquad 8\cdot 5+5\cdot 3=55\le 56,
+\end{equation}
+et la valeur de \eqref{eq:Fobj} vaut
+\begin{equation}\label{eq:Fvalue_int}
+F(\hat x,\hat y)=2\cdot 5+3=13.
+\end{equation}
+En combinant \eqref{eq:boundF_floor} et \eqref{eq:Fvalue_int}, on conclut
+\begin{equation}\label{eq:IPoptF}
+\begin{aligned}
+F^\star_{\mathbb{N}} &= 13,\\
+(x^\star_{\mathbb{N}},y^\star_{\mathbb{N}}) &= (5,3).
+\end{aligned}
+\end{equation}
+
+\subsection{G modification}
+
+On remplace l'objectif par
+\begin{equation}\label{eq:Gobj}
+G(x,y)=x+6y.
+\end{equation}
+Les sommets pertinents de $\mathcal{F}_{\mathbb{R}}$ (intersections des contraintes actives) sont
+\begin{equation}\label{eq:verts}
+\begin{aligned}
+P_1 &= (0,0),\quad P_2 = (4,0),\quad P_3 = (0,8),\\
+P_4 &= (2,8),\quad P_5 = \left(\frac{76}{13},\frac{24}{13}\right).
+\end{aligned}
+\end{equation}
+On évalue \eqref{eq:Gobj} en ces sommets :
+\begin{align}
+G(P_1)&=0, \label{eq:GP1}\\
+G(P_2)&=4, \label{eq:GP2}\\
+G(P_3)&=48, \label{eq:GP3}\\
+G(P_4)&=2+6\cdot 8=50, \label{eq:GP4}\\
+G(P_5)&=\frac{76}{13}+6\cdot\frac{24}{13}=\frac{220}{13}. \label{eq:GP5}
+\end{align}
+Comme \eqref{eq:GP4} est la plus grande valeur parmi \eqref{eq:GP1}--\eqref{eq:GP5}, la relaxation linéaire est optimisée en
+\begin{equation}\label{eq:LPoptG}
+(x^{\star}_{\mathbb{R}},y^{\star}_{\mathbb{R}})=(2,8),
+\qquad
+G^\star_{\mathbb{R}}=50.
+\end{equation}
+
+On peut alors déduire immédiatement le résultat pour le problème entier : le point \eqref{eq:LPoptG} est déjà dans $\mathbb{N}^2$, donc il est faisable pour \eqref{eq:IP_feas}. Comme la relaxation fournit une borne supérieure et que cette borne est atteinte par un point entier, on obtient
+\begin{equation}\label{eq:IPoptG}
+G^\star_{\mathbb{N}}=G^\star_{\mathbb{R}}=50
+\quad\text{et}\quad
+(x^\star_{\mathbb{N}},y^\star_{\mathbb{N}})=(2,8).
+\end{equation}
+
+\subsection{Mise en forme standard et forme canonique du tableau initial}
+Pour la question 3 de l'exercice 1, on écrit la relaxation sous forme standard
+\((Ax=b,\;x\ge 0)\) en posant
+\begin{equation}\label{eq:var_change}
+x_1=x,\quad x_2=y,\quad x_3,x_4,x_5\ge 0.
+\end{equation}
+La première contrainte se réécrit
+\begin{equation}\label{eq:c1_rewrite}
+y\ge x-4\iff x-y\le 4,
+\end{equation}
+puis, avec variables d'écart :
+\begin{equation}\label{eq:std_form}
+\begin{aligned}
+\max\quad & F = 2x_1 + x_2\\
+\text{s.c.}\quad
+& x_1 - x_2 + x_3 = 4,\\
+& x_2 + x_4 = 8,\\
+& 8x_1 + 5x_2 + x_5 = 56,\\
+& x_1,x_2,x_3,x_4,x_5 \ge 0.
+\end{aligned}
+\end{equation}
+\subsection{Forme Matricielle}
+En prenant la base initiale \(B=\{x_3,x_4,x_5\}\), la forme canonique du tableau associé est
+\begin{equation}\label{eq:canon_dict}
+\begin{aligned}
+x_3 &= 4 - x_1 + x_2,\\
+x_4 &= 8 - x_2,\\
+x_5 &= 56 - 8x_1 - 5x_2,\\
+F &= 2x_1 + x_2.
+\end{aligned}
+\end{equation}
+
+Sous forme matricielle,
+\begin{equation}\label{eq:matrix_std}
+A=
+\begin{bmatrix}
+1 & -1 & 1 & 0 & 0\\
+0 & 1 & 0 & 1 & 0\\
+8 & 5 & 0 & 0 & 1
+\end{bmatrix},
+\quad
+b=
+\begin{bmatrix}
+4\\8\\56
+\end{bmatrix},
+\quad
+c=
+\begin{bmatrix}
+2\\1\\0\\0\\0
+\end{bmatrix}.
+\end{equation}
+
+\section{Exercice 2 -- Méthode du simplexe}
+On considère le système (forme standard) :
+\begin{equation}\label{eq:ex2_system}
+\begin{aligned}
+\min\quad & z = 2x_1 - 3x_2 + 5x_3\\
+\text{s.c.}\quad
+& x_1 - 2x_2 + x_3 - x_4 = 4,\\
+& x_2 + 3x_3 + x_5 = 6,\\
+& 2x_1 + x_3 + 2x_4 + x_6 = 7,\\
+& x_1,\dots,x_6 \ge 0.
+\end{aligned}
+\end{equation}
+
+\subsection{Données matricielles A, b, c}
+Le problème \eqref{eq:ex2_system} s'écrit sous la forme \(Ax=b,\;x\ge 0,\;\min z=c^\top x\), avec
+\begin{equation}\label{eq:ex2_Abc}
+A=
+\begin{bmatrix}
+1 & -2 & 1 & -1 & 0 & 0\\
+0 & 1 & 3 & 0 & 1 & 0\\
+2 & 0 & 1 & 2 & 0 & 1
+\end{bmatrix},
+\quad
+b=
+\begin{bmatrix}
+4\\6\\7
+\end{bmatrix},
+\quad
+c=
+\begin{bmatrix}
+2\\-3\\5\\0\\0\\0
+\end{bmatrix}.
+\end{equation}
+La solution proposée est
+\begin{equation}\label{eq:ex2_candidate}
+(x_1,x_2,x_3,x_4,x_5,x_6)=(2,0,2,0,0,1).
+\end{equation}
+
+\subsection{Vérification : pourquoi c'est une solution de base}
+On considère
+\begin{equation}\label{eq:ex2_sets}
+B=\{x_1,x_3,x_6\},\qquad N=\{x_2,x_4,x_5\}.
+\end{equation}
+La matrice de base (colonnes \(1,3,6\) de \(A\)) est
+\begin{equation}\label{eq:ex2_AB}
+A_B=
+\begin{bmatrix}
+1 & 1 & 0\\
+0 & 3 & 0\\
+2 & 1 & 1
+\end{bmatrix},
+\qquad
+\det(A_B)=3\neq 0.
+\end{equation}
+Donc \(A_B\) est inversible : \(B\) est bien une base.
+
+Par définition, la solution de base associée à \(B\) vérifie \(x_N=0\), donc
+\begin{equation}\label{eq:ex2_xb}
+\begin{bmatrix}
+x_2\\x_4\\x_5
+\end{bmatrix}
+=
+\begin{bmatrix}
+0\\0\\0
+\end{bmatrix},
+\qquad
+x_B=A_B^{-1}b=
+\begin{bmatrix}
+x_1\\x_3\\x_6
+\end{bmatrix}
+=
+\begin{bmatrix}
+2\\2\\1
+\end{bmatrix}.
+\end{equation}
+On retrouve ainsi exactement
+\begin{equation}\label{eq:ex2_basic_values}
+(x_1,x_2,x_3,x_4,x_5,x_6)=(2,0,2,0,0,1).
+\end{equation}
+C'est donc bien une solution de base (et elle est réalisable car toutes les composantes sont \(\ge 0\)).
+
+\subsection{Tableau canonique et qualité de la base}
+En exprimant les variables de base en fonction des variables hors base
+\((x_2,x_4,x_5)\), on obtient la forme canonique :
+\begin{equation}\label{eq:ex2_canonical}
+\begin{aligned}
+x_1 &= 2 + \frac{7}{3}x_2 + x_4 + \frac{1}{3}x_5,\\
+x_3 &= 2 - \frac{1}{3}x_2 - \frac{1}{3}x_5,\\
+x_6 &= 1 - \frac{13}{3}x_2 - 4x_4 - \frac{1}{3}x_5,\\
+z   &= 14 + 2x_4 - x_5.
+\end{aligned}
+\end{equation}
+La base est réalisable (valeurs de base \(2,2,1\ge 0\)).
+La valeur associée est
+\begin{equation}\label{eq:ex2_zbase}
+z=2\cdot 2 - 3\cdot 0 + 5\cdot 2 = 14.
+\end{equation}
+Elle n'est pas optimale pour un problème de minimisation, car le coût réduit de \(x_5\)
+dans \eqref{eq:ex2_canonical} vaut \(-1<0\).
+
+\subsection{Simplexe depuis cette base}
+Variable entrante : \(x_5\) (coût réduit négatif). Test du rapport :
+\begin{equation}\label{eq:ex2_ratio}
+x_3=2-\frac{1}{3}x_5,\quad x_6=1-\frac{1}{3}x_5
+\;\Rightarrow\;
+x_5\le 6,\;x_5\le 3.
+\end{equation}
+La variable sortante est \(x_6\). Après pivot (\(x_5\) entre, \(x_6\) sort), on obtient :
+\begin{equation}\label{eq:ex2_after_pivot}
+\begin{aligned}
+x_5 &= 3 - 13x_2 - 12x_4 - 3x_6,\\
+x_1 &= 3 - 2x_2 - 3x_4 - x_6,\\
+x_3 &= 1 + 4x_2 + 4x_4 + x_6,\\
+z   &= 11 + 13x_2 + 14x_4 + 3x_6.
+\end{aligned}
+\end{equation}
+Tous les coûts réduits des variables hors base \((x_2,x_4,x_6)\) sont non négatifs, donc la
+solution optimale est atteinte pour
+\(x_2=x_4=x_6=0\), soit
+\begin{equation}\label{eq:ex2_opt}
+x^\star=(3,0,1,0,3,0),
+\qquad
+z^\star=11.
+\end{equation}
+
+\section{Exercice 4 -- Résolution par implémentation du simplexe}
+Les deux problèmes ont été résolus avec le script Python
+\texttt{tp3/ex4\_ex5.py}, qui utilise la classe \texttt{Tableau}
+et la méthode \texttt{addSlackAndSolve()}.
+
+\subsection{Problème 1}
+\begin{equation}\label{eq:ex4_p1}
+\begin{aligned}
+\max\quad & z = 8x_1 + 6x_2\\
+\text{s.c.}\quad
+& 5x_1 + 3x_2 \le 30,\\
+& 2x_1 + 3x_2 \le 24,\\
+& x_1 + 3x_2 \le 18,\\
+& x_1,x_2 \ge 0.
+\end{aligned}
+\end{equation}
+Résultat obtenu :
+\begin{equation}\label{eq:ex4_p1_res}
+x_1^\star=3,\quad x_2^\star=5,\quad z^\star=54.
+\end{equation}
+
+\subsection{Problème 2}
+\begin{equation}\label{eq:ex4_p2}
+\begin{aligned}
+\max\quad & z = x_1 + 2x_2\\
+\text{s.c.}\quad
+& -3x_1 + 2x_2 \le 2,\\
+& -x_1 + 2x_2 \le 4,\\
+& x_1 + x_2 \le 5,\\
+& x_1,x_2 \ge 0.
+\end{aligned}
+\end{equation}
+Résultat obtenu :
+\begin{equation}\label{eq:ex4_p2_res}
+x_1^\star=2,\quad x_2^\star=3,\quad z^\star=8.
+\end{equation}
+
+\section{Exercice 5 -- Dualité et écarts complémentaires}
+Le problème primal est :
+\begin{equation}\label{eq:ex5_primal}
+\begin{aligned}
+\min\quad & z(x)=2x_1+3x_2\\
+\text{s.c.}\quad
+& 2x_1+x_2 \ge 3,\\
+& 2x_1-x_2 \ge 5,\\
+& x_1+4x_2 \ge 6,\\
+& x_1,x_2\ge 0.
+\end{aligned}
+\end{equation}
+
+\subsection{Dual}
+Comme le primal est de type \(\min\) avec contraintes \(\ge\), le dual est :
+\begin{equation}\label{eq:ex5_dual}
+\begin{aligned}
+\max\quad & w=3y_1+5y_2+6y_3\\
+\text{s.c.}\quad
+& 2y_1+2y_2+y_3 \le 2,\\
+& y_1-y_2+4y_3 \le 3,\\
+& y_1,y_2,y_3 \ge 0.
+\end{aligned}
+\end{equation}
+
+\subsection{Contraintes d'écarts complémentaires}
+\begin{align}
+x_1\bigl(2-(2y_1+2y_2+y_3)\bigr)&=0,\label{eq:cs1}\\
+x_2\bigl(3-(y_1-y_2+4y_3)\bigr)&=0,\label{eq:cs2}\\
+y_1(2x_1+x_2-3)&=0,\label{eq:cs3}\\
+y_2(2x_1-x_2-5)&=0,\label{eq:cs4}\\
+y_3(x_1+4x_2-6)&=0.\label{eq:cs5}
+\end{align}
+
+\subsection{Vérification des deux points demandés}
+\paragraph{\(x_1=3,\;x_2=1\).}
+Ce point est réalisable pour \eqref{eq:ex5_primal}. Il n'est pas une solution de base (une seule contrainte active, \(C2\)), et
+\begin{equation}
+z(3,1)=2\cdot 3+3\cdot 1=9.
+\end{equation}
+Il n'est donc pas optimal.
+
+\paragraph{\(x_1=\frac{26}{9},\;x_2=\frac{7}{9}\).}
+Ce point est réalisable et de base (contraintes actives \(C2\) et \(C3\), linéairement indépendantes). Sa valeur est
+\begin{equation}
+z\!\left(\frac{26}{9},\frac{7}{9}\right)
+=2\cdot\frac{26}{9}+3\cdot\frac{7}{9}
+=\frac{73}{9}\approx 8.111111.
+\end{equation}
+Comme il s'agit du minimum sur les sommets réalisables, il est optimal :
+\begin{equation}\label{eq:ex5_opt}
+x^\star=\left(\frac{26}{9},\frac{7}{9}\right),\qquad
+z^\star=\frac{73}{9}.
+\end{equation}
+
+
+\end{document}
